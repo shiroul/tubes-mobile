@@ -67,10 +67,10 @@ class _BriefingScreenState extends State<BriefingScreen> {
               onPressed: _isAtBottom
                   ? () => Navigator.pushNamed(context, '/confirmation')
                   : null,
-              child: Text('Mengerti'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _isAtBottom ? Colors.red : Colors.grey,
               ),
+              child: Text('Mengerti'),
             ),
           ],
         ),

@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen2 extends StatefulWidget {
-  RegisterScreen2({super.key});
+  const RegisterScreen2({super.key});
 
   @override
   _RegisterScreen2State createState() => _RegisterScreen2State();
