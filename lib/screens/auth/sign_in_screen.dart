@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'register_screen1.dart';
+import 'register_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -55,11 +55,11 @@ class _SignInScreenState extends State<SignInScreen> {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCredential.user;
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-        // New user, redirect to RegisterScreen1 with prefilled info
+        // New user, redirect to RegisterScreen with prefilled info
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => RegisterScreen1(
+            builder: (context) => RegisterScreen(
               prefillEmail: user?.email ?? '',
               prefillName: user?.displayName ?? '',
               prefillPhone: user?.phoneNumber ?? '',
@@ -131,7 +131,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       children: [
                         Text('Belum punya akun? '),
                         GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, '/register1'),
+                          onTap: () => Navigator.pushNamed(context, '/register'),
                           child: Text(
                             'Registrasi di sini',
                             style: TextStyle(
