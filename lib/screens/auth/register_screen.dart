@@ -39,8 +39,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Medis',
     'Logistik',
     'Evakuasi',
-    'Penyelamatan',
-    'Dapur Umum',
+    'Media',
+    'Bantuan Umum',
   ];
   final Set<String> selectedSkills = {};
   

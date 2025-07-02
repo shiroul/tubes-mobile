@@ -22,8 +22,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     'Medis',
     'Logistik',
     'Evakuasi',
-    'Penyelamatan',
-    'Dapur Umum',
+    'Media',
+    'Bantuan Umum',
   ];
   Set<String> selectedSkills = {};
   File? _pickedImage;
