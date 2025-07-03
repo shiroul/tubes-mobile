@@ -16,6 +16,7 @@ import 'screens/admin/all_reports_screen.dart';
 import 'screens/admin/report_acceptance_confirmation_screen.dart';
 import 'screens/volunteers/volunteer_registration_screen.dart';
 import 'screens/volunteers/volunteers_list_screen.dart';
+import 'core/constants/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'LINA App',
-      theme: ThemeData(primarySwatch: Colors.red),
+      theme: AppTheme.lightTheme,
       home: AuthGate(),
       routes: {
         '/signin': (context) => SignInScreen(),
