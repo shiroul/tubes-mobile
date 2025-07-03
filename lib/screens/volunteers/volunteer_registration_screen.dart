@@ -627,12 +627,14 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
                             children: [
                               Icon(Icons.check_circle, color: Colors.green, size: 16),
                               SizedBox(width: 4),
-                              Text(
-                                'Keahlian yang cocok ditandai dengan border hijau',
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontSize: 11,
-                                  fontStyle: FontStyle.italic,
+                              Expanded(
+                                child: Text(
+                                  'Keahlian yang cocok ditandai dengan border hijau',
+                                  style: TextStyle(
+                                    color: Colors.green[700],
+                                    fontSize: 11,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
                               ),
                             ],

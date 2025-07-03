@@ -336,10 +336,39 @@ class DisasterDetailPage extends StatelessWidget {
                     onPressed: () async {
                       // Don't close the bottom sheet immediately
                       try {
+                        // Step 1: Update event status to completed
                         await FirebaseFirestore.instance.collection('events').doc(eventId).update({
                           'status': 'completed',
                           'resolvedAt': FieldValue.serverTimestamp(),
                         });
+                        
+                        // Step 2: Find all volunteer registrations for this event
+                        final volunteerRegistrations = await FirebaseFirestore.instance
+                            .collection('volunteer_registrations')
+                            .where('eventId', isEqualTo: eventId)
+                            .get();
+                        
+                        // Step 3: Update availability status for all registered volunteers
+                        final batch = FirebaseFirestore.instance.batch();
+                        
+                        for (final registration in volunteerRegistrations.docs) {
+                          final registrationData = registration.data();
+                          final userId = registrationData['userId'];
+                          
+                          if (userId != null) {
+                            // Update user's availability back to 'available'
+                            final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+                            batch.update(userRef, {
+                              'availability': 'available',
+                            });
+                          }
+                          
+                          // Step 4: Delete the volunteer registration record
+                          batch.delete(registration.reference);
+                        }
+                        
+                        // Execute all updates and deletions in a batch
+                        await batch.commit();
                         
                         // Close bottom sheet after successful update
                         Navigator.pop(context);
