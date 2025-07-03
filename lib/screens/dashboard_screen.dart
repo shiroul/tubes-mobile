@@ -660,18 +660,6 @@ class DashboardScreen extends StatelessWidget {
                                 },
                               ),
                             ],
-                            SizedBox(height: 24),
-                            // Announcements Section (Mocked for now)
-                            Text('Pengumuman', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 8),
-                            Card(
-                              color: Colors.yellow[100],
-                              child: ListTile(
-                                leading: Icon(Icons.announcement, color: Colors.orange),
-                                title: Text('Tetap waspada dan jaga kesehatan selama bertugas!'),
-                              ),
-                            ),
-                            SizedBox(height: 24),
                           ],
                         ),
                       ),
