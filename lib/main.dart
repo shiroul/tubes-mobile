@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'splash_screen.dart';
-import 'register_screen1.dart';
-import 'register_screen2.dart';
-import 'sign_in_screen.dart';
-import 'dashboard_screen.dart';
-import 'other_screens.dart';
-import 'user_profile_screen.dart';
-import 'report_disaster_screen.dart';
-import 'report_detail_screen.dart';
+import 'screens/auth/splash_screen.dart';
+import 'screens/auth/sign_in_screen.dart';
+import 'screens/auth/register_screen.dart';
+import 'screens/auth/briefing_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'widgets/confirmation_screen.dart';
+import 'screens/profile/user_profile_screen.dart';
+import 'screens/events/all_events_screen.dart';
+import 'screens/reports/create_report_screen.dart';
+import 'screens/reports/my_reports_screen.dart';
+import 'screens/admin/create_event_screen.dart';
+import 'screens/admin/all_reports_screen.dart';
+import 'screens/admin/report_acceptance_confirmation_screen.dart';
+import 'screens/volunteers/volunteer_registration_screen.dart';
+import 'screens/volunteers/volunteers_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,14 +34,44 @@ class MyApp extends StatelessWidget {
       home: AuthGate(),
       routes: {
         '/signin': (context) => SignInScreen(),
-        '/register1': (context) => RegisterScreen1(),
-        '/register2': (context) => RegisterScreen2(),
+        '/register': (context) => RegisterScreen(),
         '/briefing': (context) => BriefingScreen(),
-        '/confirmation': (context) => ConfirmationScreen(),
+        '/confirmation': (context) => ConfirmationScreen.registration(),
+        '/confirmation_report': (context) => ConfirmationScreen.reportSubmitted(),
+        '/confirmation_event': (context) => ConfirmationScreen.eventCreated(),
+        '/confirmation_disaster_resolved': (context) => ConfirmationScreen.disasterResolved(),
+        '/confirmation_report_accepted': (context) => ConfirmationScreen.reportAccepted(),
+        '/confirmation_volunteer_registered': (context) => ConfirmationScreen.volunteerRegistered(),
         '/dashboard': (context) => DashboardScreen(),
         '/profile': (context) => UserProfileScreen(),
-        '/report': (context) => ReportDisasterScreen(),
-        '/report_detail': (context) => const Placeholder(), // Placeholder, use onGenerateRoute for dynamic
+        '/report': (context) => CreateReportScreen(),
+        '/all-events': (context) => AllEventsScreen(),
+        '/admin_all_reports': (context) => AllReportsScreen(),
+        '/admin_create_event': (context) => CreateEventScreen(),
+        '/my_reports': (context) => MyReportsScreen(),
+        '/volunteers': (context) => VolunteersListScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/report_acceptance_confirmation') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => ReportAcceptanceConfirmationScreen(
+              reportId: args['reportId'],
+              eventData: args['eventData'],
+              volunteerSummary: args['volunteerSummary'],
+              severity: args['severity'],
+            ),
+          );
+        }
+        if (settings.name == '/volunteer_registration') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => VolunteerRegistrationScreen(
+              eventId: args['eventId'],
+            ),
+          );
+        }
+        return null;
       },
     );
   }
