@@ -336,12 +336,10 @@ class DisasterDetailPage extends StatelessWidget {
                     onPressed: () async {
                       // Don't close the bottom sheet immediately
                       try {
-                        print('[DEBUG] Starting disaster resolution process...');
                         await FirebaseFirestore.instance.collection('events').doc(eventId).update({
                           'status': 'completed',
                           'resolvedAt': FieldValue.serverTimestamp(),
                         });
-                        print('[DEBUG] Firestore update successful');
                         
                         // Close bottom sheet after successful update
                         Navigator.pop(context);
@@ -350,7 +348,6 @@ class DisasterDetailPage extends StatelessWidget {
                         await Future.delayed(Duration(milliseconds: 100));
                         
                         if (context.mounted) {
-                          print('[DEBUG] Context is mounted, navigating to confirmation screen...');
                           // Navigate to confirmation screen for disaster resolution
                           Navigator.pushAndRemoveUntil(
                             context,
@@ -359,12 +356,8 @@ class DisasterDetailPage extends StatelessWidget {
                             ),
                             (route) => false,
                           );
-                          print('[DEBUG] Navigation called');
-                        } else {
-                          print('[DEBUG] Context is not mounted after delay');
                         }
                       } catch (e) {
-                        print('[DEBUG] Error occurred: $e');
                         // Close bottom sheet on error too
                         Navigator.pop(context);
                         

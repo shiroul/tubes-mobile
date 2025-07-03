@@ -62,7 +62,7 @@ class _ReportAcceptanceConfirmationScreenState extends State<ReportAcceptanceCon
         );
       }
     } catch (e) {
-      print('Error creating event: $e');
+      // Error creating event
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

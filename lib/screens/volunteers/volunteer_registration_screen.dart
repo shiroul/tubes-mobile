@@ -100,10 +100,7 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
         throw Exception('User data not loaded. Please try refreshing the page.');
       }
       
-      print('User data available: ${userData!['name']}, skills: ${userData!['skills']}'); // Debug log
-
       // Check if user has already registered for this event
-      print('Checking for existing registration...'); // Debug log
       final existingRegistration = await FirebaseFirestore.instance
           .collection('volunteer_registrations')
           .where('eventId', isEqualTo: widget.eventId)
@@ -111,7 +108,6 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
           .get();
 
       if (existingRegistration.docs.isNotEmpty) {
-        print('User already registered for this event'); // Debug log
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -122,7 +118,6 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
         }
         return;
       }
-      print('No existing registration found, proceeding...'); // Debug log
 
       // Check if the selected role still has available spots
       final eventDoc = await FirebaseFirestore.instance
@@ -145,10 +140,6 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
       final requiredCount = currentRequiredVolunteers[selectedRole] ?? 0;
       final remainingCount = requiredCount - currentRegisteredCount;
       
-      print('Current registered count for role $selectedRole: $currentRegisteredCount'); // Debug log
-      print('Required count for role $selectedRole: $requiredCount'); // Debug log
-      print('Remaining spots for role $selectedRole: $remainingCount'); // Debug log
-      
       if (remainingCount <= 0) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -162,10 +153,8 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
       }
 
       // Perform registration operations directly (no transaction needed)
-      print('Starting registration for eventId: ${widget.eventId}, userId: ${currentUser.uid}, role: $selectedRole'); // Debug log
       
       // Step 1: Create registration record
-      print('Creating registration record...'); // Debug log
       await FirebaseFirestore.instance.collection('volunteer_registrations').add({
         'eventId': widget.eventId,
         'userId': currentUser.uid,
@@ -175,10 +164,8 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
         'status': 'confirmed',
         'registeredAt': Timestamp.now(),
       });
-      print('✅ Registration record created'); // Debug log
       
       // Step 2: Update user status
-      print('Updating user status...'); // Debug log
       await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
@@ -187,10 +174,8 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
         'currentEventId': widget.eventId,
         'currentRole': selectedRole!,
       });
-      print('✅ User status updated'); // Debug log
       
       // Step 3: Update event document
-      print('Updating event document...'); // Debug log
       final finalEventDoc = await FirebaseFirestore.instance
           .collection('events')
           .doc(widget.eventId)
@@ -220,12 +205,9 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
             .update({
           'registeredVolunteers': registeredVolunteers, // Only update registered volunteers, not required count
         });
-        print('✅ Event document updated'); // Debug log
+        
       }
 
-      print('Registration completed successfully!'); // Debug log
-      
-      print('Registration successful, navigating to confirmation...'); // Debug log
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -234,11 +216,8 @@ class _VolunteerRegistrationScreenState extends State<VolunteerRegistrationScree
         );
       }
     } catch (e) {
-      print('Registration error: $e'); // Debug log
-      print('Error type: ${e.runtimeType}'); // Debug log
       // Only show error if it's not a navigation issue
       if (e.toString().contains('cloud_firestore/unknown') && e.toString().contains('null')) {
-        print('Detected null Firestore error - registration likely succeeded'); // Debug log
         if (mounted) {
           // Navigate to confirmation screen since registration likely succeeded
           Navigator.pushNamedAndRemoveUntil(

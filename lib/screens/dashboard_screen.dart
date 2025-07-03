@@ -75,57 +75,152 @@ class DashboardScreen extends StatelessWidget {
                             SizedBox(height: 24),
                             
                             // Volunteer Statistics Card
-                            Container(
-                              padding: EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    spreadRadius: 1,
-                                    blurRadius: 10,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Volunteer Terdaftar',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[700],
+                            StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .snapshots(),
+                              builder: (context, userSnapshot) {
+                                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                                  return Container(
+                                    padding: EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          spreadRadius: 1,
+                                          blurRadius: 10,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                    children: [
-                                      _buildStatColumn('125', 'Total', Colors.blue[600]!),
-                                      _buildStatColumn('100', 'Diterima', Colors.green[600]!),
-                                      _buildStatColumn('25', 'Tertunda', Colors.orange[600]!),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Relawan Terdaftar',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        Center(child: CircularProgressIndicator()),
+                                        SizedBox(height: 16),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                if (!userSnapshot.hasData) {
+                                  return Container(
+                                    padding: EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          spreadRadius: 1,
+                                          blurRadius: 10,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Relawan Terdaftar',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                        Center(
+                                          child: Text(
+                                            'Tidak dapat memuat data',
+                                            style: TextStyle(color: Colors.grey[600]),
+                                          ),
+                                        ),
+                                        SizedBox(height: 16),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                final users = userSnapshot.data!.docs;
+                                
+                                // Count total registered users
+                                final totalRegistered = users.length;
+                                
+                                // Count active duty users
+                                final activeUsers = users.where((doc) {
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  final availability = data['availability'];
+                                  return availability is String && availability.toLowerCase() == 'active duty';
+                                }).length;
+                                
+                                // Count available users (registered minus active)
+                                final availableUsers = totalRegistered - activeUsers;
+
+                                return Container(
+                                  padding: EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        spreadRadius: 1,
+                                        blurRadius: 10,
+                                        offset: Offset(0, 2),
+                                      ),
                                     ],
                                   ),
-                                  SizedBox(height: 16),
-                                  Center(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        // Navigate to volunteer details
-                                      },
-                                      child: Text(
-                                        'Detail',
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Relawan Terdaftar',
                                         style: TextStyle(
-                                          color: Colors.blue[600],
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w600,
+                                          color: Colors.grey[700],
                                         ),
                                       ),
-                                    ),
+                                      SizedBox(height: 16),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        children: [
+                                          _buildStatColumn('$totalRegistered', 'Terdaftar', Colors.blue[600]!),
+                                          _buildStatColumn('$activeUsers', 'Aktif', Colors.green[600]!),
+                                          _buildStatColumn('$availableUsers', 'Tersedia', Colors.orange[600]!),
+                                        ],
+                                      ),
+                                      SizedBox(height: 16),
+                                      Center(
+                                        child: TextButton(
+                                          onPressed: () {
+                                            Navigator.pushNamed(context, '/volunteers');
+                                          },
+                                          child: Text(
+                                            'Detail',
+                                            style: TextStyle(
+                                              color: Colors.blue[600],
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             ),
                             
                             SizedBox(height: 24),
@@ -250,141 +345,34 @@ class DashboardScreen extends StatelessWidget {
                                     .collection('reports')
                                     .snapshots(),
                                 builder: (context, reportSnapshot) {
-                                  print('Dashboard: Report snapshot state: ${reportSnapshot.connectionState}');
-                                  print('Dashboard: Has data: ${reportSnapshot.hasData}');
-                                  if (reportSnapshot.hasData) {
-                                    print('Dashboard: Number of docs: ${reportSnapshot.data!.docs.length}');
-                                    for (var doc in reportSnapshot.data!.docs) {
-                                      final data = doc.data() as Map<String, dynamic>;
-                                      print('Dashboard: Report ID: ${doc.id}, Status: ${data['status']}, Type: ${data['type']}');
-                                    }
-                                  }
-                                  
                                   if (reportSnapshot.connectionState == ConnectionState.waiting) {
                                     return Center(child: CircularProgressIndicator());
                                   }
                                   if (!reportSnapshot.hasData || reportSnapshot.data!.docs.isEmpty) {
-                                    print('Dashboard: No data or empty docs');
                                     return Card(
                                       child: Padding(
                                         padding: EdgeInsets.all(16),
-                                        child: Column(
+                                        child: Row(
                                           children: [
-                                            Row(
-                                              children: [
-                                                Icon(Icons.info, color: Colors.blue),
-                                                SizedBox(width: 8),
-                                                Expanded(child: Text('Tidak ada laporan ditemukan')),
-                                              ],
-                                            ),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              'Debug: Snapshot hasData: ${reportSnapshot.hasData}, Docs length: ${reportSnapshot.hasData ? reportSnapshot.data!.docs.length : 0}',
-                                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                                            ),
+                                            Icon(Icons.check_circle, color: Colors.green),
+                                            SizedBox(width: 8),
+                                            Expanded(child: Text('Tidak ada laporan yang menunggu review')),
                                           ],
                                         ),
                                       ),
                                     );
                                   }
                                   
-                                  // Filter reports that are pending or don't have a status (default to pending)
                                   final allDocs = reportSnapshot.data!.docs;
-                                  print('Dashboard: Total docs: ${allDocs.length}');
                                   
-                                  // Show all reports for debugging
-                                  if (allDocs.isNotEmpty) {
-                                    print('Dashboard: Showing all reports for debugging...');
-                                    return Column(
-                                      children: [
-                                        // Debug info
-                                        Container(
-                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue[50],
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.info_outline, color: Colors.blue[600], size: 16),
-                                                  SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      'DEBUG: Ditemukan ${allDocs.length} laporan total di database',
-                                                      style: TextStyle(
-                                                        color: Colors.blue[700],
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        // Show all reports
-                                        ...allDocs.map((doc) {
-                                          final data = doc.data() as Map<String, dynamic>;
-                                          final media = data['media'] as List?;
-                                          final location = data['location'] as Map<String, dynamic>?;
-                                          final city = location?['city'] ?? '-';
-                                          final province = location?['province'] ?? '-';
-                                          final status = data['status'] ?? 'no-status';
-                                          
-                                          return Card(
-                                            child: ListTile(
-                                              leading: media != null && media.isNotEmpty
-                                                  ? CircleAvatar(backgroundImage: NetworkImage(media[0]))
-                                                  : Icon(Icons.report, color: Colors.orange),
-                                              title: Text('${data['type'] ?? '-'} (Status: $status)'),
-                                              subtitle: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text('Deskripsi: ${data['details'] ?? '-'}'),
-                                                  Text('Lokasi: $city, $province'),
-                                                  SizedBox(height: 4),
-                                                  Container(
-                                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: status == 'pending' ? Colors.orange[100] : Colors.grey[100],
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      border: Border.all(
-                                                        color: status == 'pending' ? Colors.orange[300]! : Colors.grey[300]!,
-                                                      ),
-                                                    ),
-                                                    child: Text(
-                                                      status == 'pending' ? 'MENUNGGU REVIEW' : status.toUpperCase(),
-                                                      style: TextStyle(
-                                                        color: status == 'pending' ? Colors.orange[700] : Colors.grey[700],
-                                                        fontSize: 10,
-                                                        fontWeight: FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => ReportDetailScreen(reportId: doc.id),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          );
-                                        }),
-                                      ],
-                                    );
-                                  }
+                                  // Filter reports that are pending
+                                  final pendingReports = allDocs.where((doc) {
+                                    final data = doc.data() as Map<String, dynamic>;
+                                    final status = data['status'] ?? 'pending';
+                                    return status == 'pending';
+                                  }).toList();
                                   
-                                  // This section will only run if no reports found (shouldn't happen with debug above)
-                                  if (allDocs.isEmpty) {
+                                  if (pendingReports.isEmpty) {
                                     return Card(
                                       child: Padding(
                                         padding: EdgeInsets.all(16),
@@ -399,7 +387,58 @@ class DashboardScreen extends StatelessWidget {
                                     );
                                   }
                                   
-                                  return Container(); // Fallback
+                                  return Column(
+                                    children: pendingReports.map((doc) {
+                                      final data = doc.data() as Map<String, dynamic>;
+                                      final media = data['media'] as List?;
+                                      final location = data['location'] as Map<String, dynamic>?;
+                                      final city = location?['city'] ?? '-';
+                                      final province = location?['province'] ?? '-';
+                                      final status = data['status'] ?? 'pending';
+                                      
+                                      return Card(
+                                        margin: EdgeInsets.only(bottom: 8),
+                                        child: ListTile(
+                                          leading: media != null && media.isNotEmpty
+                                              ? CircleAvatar(backgroundImage: NetworkImage(media[0]))
+                                              : Icon(Icons.report, color: Colors.orange),
+                                          title: Text('${data['type'] ?? 'Laporan'} - ${data['details'] ?? 'Tanpa deskripsi'}'),
+                                          subtitle: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Lokasi: $city, $province'),
+                                              SizedBox(height: 4),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange[100],
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  border: Border.all(color: Colors.orange[300]!),
+                                                ),
+                                                child: Text(
+                                                  'MENUNGGU REVIEW',
+                                                  style: TextStyle(
+                                                    color: Colors.orange[700],
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ReportDetailScreen(reportId: doc.id),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
                                 },
                               ),
                               SizedBox(height: 16),

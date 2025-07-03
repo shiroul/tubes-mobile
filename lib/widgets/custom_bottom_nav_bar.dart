@@ -20,7 +20,7 @@ class CustomBottomNavBar extends StatelessWidget {
         }
       }
     } catch (e) {
-      print('Error getting user role: $e');
+      // Error getting user role - default to regular user
     }
     return null;
   }

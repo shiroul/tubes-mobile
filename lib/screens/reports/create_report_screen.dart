@@ -600,7 +600,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               // Close loading dialog
                               Navigator.pop(context);
                               
-                              print('Error submitting report: $e'); // Debug log
+                              // Error submitting report
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('Gagal mengirim laporan: ${e.toString()}'),

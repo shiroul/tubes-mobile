@@ -12,8 +12,7 @@ class MyReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    // DEBUG: Print current user UID
-    print('[MyReportsScreen] Current user UID: \'${user?.uid}\'');
+    // Get current user
     if (user == null) {
       return Scaffold(
         appBar: AppBar(title: Text('Laporan Saya')),

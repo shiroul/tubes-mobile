@@ -47,16 +47,13 @@ class ParticipationRepository {
       
       // Ensure eventId is a string
       if (eventId == null || eventId is! String) {
-        print('Invalid eventId: $eventId');
         return null;
       }
       
       // Fetch event details
       try {
-        print('Fetching event details for eventId: $eventId'); // Debug log
         final eventDoc = await _eventCollection.doc(eventId).get();
         if (!eventDoc.exists) {
-          print('Event not found: $eventId');
           // Return participation data with fallback values
           return ParticipationData(
             eventId: eventId,
@@ -70,10 +67,8 @@ class ParticipationRepository {
         }
         
         final eventData = eventDoc.data();
-        print('Event data found: $eventData'); // Debug log
         
         if (eventData == null) {
-          print('Event data is null for eventId: $eventId');
           return ParticipationData(
             eventId: eventId,
             eventTitle: 'Data Event Kosong',
@@ -95,7 +90,6 @@ class ParticipationRepository {
           eventDate: eventData['date'] as Timestamp? ?? eventData['reportedAt'] as Timestamp?,
         );
       } catch (e) {
-        print('Error fetching event details for eventId $eventId: $e');
         // Return participation data with fallback values instead of null
         return ParticipationData(
           eventId: eventId,
