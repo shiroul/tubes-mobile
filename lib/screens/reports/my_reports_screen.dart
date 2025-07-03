@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/report.dart';
 import '../../widgets/report_card.dart';
+import '../../widgets/custom_bottom_nav_bar.dart';
+import '../../widgets/custom_app_header.dart';
 import '../../repositories/report_repository.dart';
 
 class MyReportsScreen extends StatelessWidget {
@@ -20,7 +22,11 @@ class MyReportsScreen extends StatelessWidget {
     }
     final repo = ReportRepository();
     return Scaffold(
-      appBar: AppBar(title: Text('Laporan Saya')),
+      appBar: CustomAppHeader(
+        title: 'Laporan Saya',
+        showLogo: false,
+        showProfileIcon: true,
+      ),
       body: StreamBuilder<List<ReportModel>>(
         stream: repo.reportsByUser(user.uid),
         builder: (context, snapshot) {
@@ -41,6 +47,7 @@ class MyReportsScreen extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: 1),
     );
   }
 }

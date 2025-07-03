@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_profile.dart';
-import '../../widgets/custom_bottom_nav_bar.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
 import 'dart:io';
@@ -67,12 +66,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Profil')),
+        appBar: AppBar(
+          title: Text('Profil'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0.5,
+        ),
         body: Center(child: Text('Tidak ada data user.')),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text('Profil')),
+      appBar: AppBar(
+        title: Text('Profil'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0.5,
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
         builder: (context, snapshot) {
@@ -149,12 +158,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Text('Keahlian', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 children: allSkills.map((skill) {
                   final isSelected = selectedSkills.contains(skill);
                   return FilterChip(
-                    label: Text(skill),
+                    label: Text(
+                      skill,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.grey[700],
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
                     selected: isSelected,
                     onSelected: (selected) async {
                       setState(() {
@@ -168,6 +183,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         'skills': selectedSkills.toList(),
                       });
                     },
+                    selectedColor: Colors.blue,
+                    backgroundColor: Colors.grey[100],
+                    checkmarkColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? Colors.blue : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    showCheckmark: false,
                   );
                 }).toList(),
               ),
@@ -210,7 +236,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: 3),
     );
   }
 }

@@ -7,6 +7,7 @@ import '../../models/disaster_event.dart';
 import '../../helpers/cloudinary_helper.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
+import '../../widgets/custom_app_header.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -129,7 +130,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Buat Event Bencana')),
+      appBar: CustomAppHeader(
+        title: 'Buat Event Bencana',
+        showProfileIcon: true,
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20),
         child: Form(

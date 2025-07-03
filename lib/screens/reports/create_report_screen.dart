@@ -8,6 +8,7 @@ import '../../models/report.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
+import '../../widgets/custom_app_header.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateReportScreen extends StatefulWidget {
@@ -104,12 +105,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text('Lapor Bencana'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-        centerTitle: true,
+      appBar: CustomAppHeader(
+        title: 'Lapor Bencana',
+        showProfileIcon: true,
       ),
       body: Form(
         key: _formKey,

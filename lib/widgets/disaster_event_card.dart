@@ -272,7 +272,7 @@ class DisasterEventCard extends StatelessWidget {
 
   Color _getColorForSeverity(String severity) {
     switch (severity.toLowerCase()) {
-      case 'berat':
+      case 'parah':
         return Colors.red[600]!;
       case 'sedang':
         return Colors.orange[600]!;
@@ -285,7 +285,7 @@ class DisasterEventCard extends StatelessWidget {
 
   String _getSeverityText(String severity) {
     switch (severity.toLowerCase()) {
-      case 'berat':
+      case 'parah':
         return 'PARAH';
       case 'sedang':
         return 'SEDANG';

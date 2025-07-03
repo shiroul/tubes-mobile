@@ -13,6 +13,9 @@ import 'screens/reports/create_report_screen.dart';
 import 'screens/reports/my_reports_screen.dart';
 import 'screens/admin/create_event_screen.dart';
 import 'screens/admin/all_reports_screen.dart';
+import 'screens/admin/report_acceptance_confirmation_screen.dart';
+import 'screens/volunteers/volunteer_registration_screen.dart';
+import 'screens/volunteers/volunteers_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,14 +40,38 @@ class MyApp extends StatelessWidget {
         '/confirmation_report': (context) => ConfirmationScreen.reportSubmitted(),
         '/confirmation_event': (context) => ConfirmationScreen.eventCreated(),
         '/confirmation_disaster_resolved': (context) => ConfirmationScreen.disasterResolved(),
+        '/confirmation_report_accepted': (context) => ConfirmationScreen.reportAccepted(),
+        '/confirmation_volunteer_registered': (context) => ConfirmationScreen.volunteerRegistered(),
         '/dashboard': (context) => DashboardScreen(),
         '/profile': (context) => UserProfileScreen(),
         '/report': (context) => CreateReportScreen(),
         '/all-events': (context) => AllEventsScreen(),
         '/admin_all_reports': (context) => AllReportsScreen(),
-        '/report_detail': (context) => const Placeholder(), // Placeholder, use onGenerateRoute for dynamic
         '/admin_create_event': (context) => CreateEventScreen(),
         '/my_reports': (context) => MyReportsScreen(),
+        '/volunteers': (context) => VolunteersListScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/report_acceptance_confirmation') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => ReportAcceptanceConfirmationScreen(
+              reportId: args['reportId'],
+              eventData: args['eventData'],
+              volunteerSummary: args['volunteerSummary'],
+              severity: args['severity'],
+            ),
+          );
+        }
+        if (settings.name == '/volunteer_registration') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => VolunteerRegistrationScreen(
+              eventId: args['eventId'],
+            ),
+          );
+        }
+        return null;
       },
     );
   }

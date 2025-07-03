@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/disaster_event_card.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
+import '../../widgets/custom_app_header.dart';
 import '../../repositories/event_repository.dart';
 import 'event_detail_screen.dart';
 
@@ -12,11 +13,9 @@ class AllEventsScreen extends StatelessWidget {
     final eventRepo = EventRepository();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Semua Bencana Aktif'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+      appBar: CustomAppHeader(
+        title: 'Semua Bencana Aktif',
+        showProfileIcon: true,
       ),
       body: StreamBuilder<List<EventWithId>>(
         stream: eventRepo.watchActiveEvents(),
@@ -64,7 +63,7 @@ class AllEventsScreen extends StatelessWidget {
           final events = snapshot.data!;
           
           // Sort by severity and time
-          final severityOrder = {'tinggi': 0, 'sedang': 1, 'rendah': 2};
+          final severityOrder = {'parah': 0, 'sedang': 1, 'ringan': 2};
           events.sort((a, b) {
             final sa = severityOrder[a.event.severityLevel] ?? 3;
             final sb = severityOrder[b.event.severityLevel] ?? 3;

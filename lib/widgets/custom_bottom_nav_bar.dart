@@ -53,7 +53,7 @@ class CustomBottomNavBar extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/all-events');
             break;
           case 3:
-            Navigator.pushReplacementNamed(context, '/profile');
+            Navigator.pushReplacementNamed(context, '/volunteers');
             break;
         }
       },
@@ -71,8 +71,8 @@ class CustomBottomNavBar extends StatelessWidget {
           label: 'Bencana',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profil',
+          icon: Icon(Icons.group),
+          label: 'Relawan',
         ),
       ],
     );

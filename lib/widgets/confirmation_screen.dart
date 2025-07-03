@@ -63,6 +63,28 @@ class ConfirmationScreen extends StatelessWidget {
     );
   }
 
+  factory ConfirmationScreen.reportAccepted() {
+    return ConfirmationScreen(
+      title: 'Laporan Diterima',
+      message: 'Laporan bencana telah berhasil diterima dan event bencana aktif telah dibuat. Relawan dapat segera melakukan registrasi.',
+      icon: Icons.fact_check,
+      iconColor: Colors.green,
+      buttonText: 'Bencana Aktif',
+      routeName: '/all-events',
+    );
+  }
+
+  factory ConfirmationScreen.volunteerRegistered() {
+    return ConfirmationScreen(
+      title: 'Pendaftaran Berhasil',
+      message: 'Anda telah berhasil mendaftar sebagai relawan. Status Anda telah diubah menjadi "Sedang Bertugas" dan menunggu konfirmasi dari admin.',
+      icon: Icons.volunteer_activism,
+      iconColor: Colors.green,
+      buttonText: 'Bencana Aktif',
+      routeName: '/all-events',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

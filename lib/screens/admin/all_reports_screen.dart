@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
+import '../../widgets/custom_app_header.dart';
 import '../reports/report_detail_screen.dart';
 
 class AllReportsScreen extends StatelessWidget {
@@ -9,11 +10,10 @@ class AllReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Semua Laporan'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+      appBar: CustomAppHeader(
+        title: 'Semua Laporan',
+        showLogo: false,
+        showProfileIcon: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

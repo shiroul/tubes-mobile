@@ -30,7 +30,6 @@ class _EventConfigurationScreenState extends State<EventConfigurationScreen> {
   // Controllers for volunteer counts
   Map<String, TextEditingController> volunteerControllers = {};
   String selectedSeverity = 'sedang';
-  bool isProcessing = false;
 
   @override
   void initState() {
@@ -50,104 +49,63 @@ class _EventConfigurationScreenState extends State<EventConfigurationScreen> {
     super.dispose();
   }
 
-  Future<void> _acceptReport() async {
-    if (isProcessing) return;
-
-    setState(() {
-      isProcessing = true;
+  void _acceptReport() {
+    // Validate that at least one volunteer type is required
+    bool hasVolunteers = false;
+    Map<String, int> requiredVolunteers = {};
+    
+    volunteerControllers.forEach((role, controller) {
+      int count = int.tryParse(controller.text) ?? 0;
+      if (count > 0) {
+        requiredVolunteers[role] = count;
+        hasVolunteers = true;
+      }
     });
 
-    try {
-      // Prepare volunteer requirements
-      Map<String, int> requiredVolunteers = {};
-      volunteerControllers.forEach((role, controller) {
-        int count = int.tryParse(controller.text) ?? 0;
-        if (count > 0) {
-          requiredVolunteers[role] = count;
-        }
-      });
-
-      // Debug: Print what we're sending
-      print('Screen - Selected severity: $selectedSeverity');
-      print('Screen - Required volunteers: $requiredVolunteers');
-
-      // Create event from report
-      final eventData = {
-        'type': widget.reportData['type'] ?? '-',
-        'details': widget.reportData['details'] ?? '-',
-        'location': {
-          'coordinates': widget.location['coordinates'],
-          'city': widget.location['city'] ?? '-',
-          'province': widget.location['province'] ?? '-',
-        },
-        'media': widget.reportData['media'] ?? [],
-        'requiredVolunteers': requiredVolunteers,
-        'severityLevel': selectedSeverity,
-        'status': 'active',
-        'reportedAt': FieldValue.serverTimestamp(),
-      };
-
-      print('Event data to be saved: $eventData');
-
-      final docRef = await FirebaseFirestore.instance.collection('events').add(eventData);
-
-      // Debug: Read back the created document to verify it was saved correctly
-      final createdDoc = await docRef.get();
-      if (createdDoc.exists) {
-        final savedData = createdDoc.data();
-        print('Event successfully created with ID: ${docRef.id}');
-        print('Saved event data: $savedData');
-        print('Saved severity level: ${savedData?['severityLevel']}');
-      }
-
-      // Update report status to 'active' instead of deleting it
-      await FirebaseFirestore.instance.collection('reports').doc(widget.reportId).update({
-        'status': 'active'
-      });
-
-      if (mounted) {
-        // Navigate back to previous screen
-        Navigator.pop(context);
-        
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Laporan diterima dan event berhasil dibuat'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+    if (!hasVolunteers) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.warning, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Masukkan minimal satu kebutuhan relawan'),
+            ],
           ),
-        );
-      }
-    } catch (e) {
-      print('Error creating event: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Gagal menerima laporan: $e'),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          isProcessing = false;
-        });
-      }
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
     }
+
+    // Prepare event data for confirmation
+    final eventData = {
+      'type': widget.reportData['type'] ?? '-',
+      'details': widget.reportData['details'] ?? '-',
+      'location': {
+        'coordinates': widget.location['coordinates'],
+        'city': widget.location['city'] ?? '-',
+        'province': widget.location['province'] ?? '-',
+      },
+      'media': widget.reportData['media'] ?? [],
+      'requiredVolunteers': requiredVolunteers,
+      'severityLevel': selectedSeverity,
+      'status': 'active',
+      'reportedAt': FieldValue.serverTimestamp(),
+    };
+
+    // Navigate to confirmation screen
+    Navigator.pushNamed(
+      context,
+      '/report_acceptance_confirmation',
+      arguments: {
+        'reportId': widget.reportId,
+        'eventData': eventData,
+        'volunteerSummary': requiredVolunteers,
+        'severity': selectedSeverity,
+      },
+    );
   }
 
   @override
@@ -343,7 +301,7 @@ class _EventConfigurationScreenState extends State<EventConfigurationScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: isProcessing ? null : () {
+                    onPressed: () {
                       Navigator.pop(context);
                     },
                     style: OutlinedButton.styleFrom(
@@ -366,7 +324,7 @@ class _EventConfigurationScreenState extends State<EventConfigurationScreen> {
                 SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: isProcessing ? null : _acceptReport,
+                    onPressed: _acceptReport,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green[600],
                       foregroundColor: Colors.white,
@@ -376,29 +334,13 @@ class _EventConfigurationScreenState extends State<EventConfigurationScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: isProcessing
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Memproses...'),
-                            ],
-                          )
-                        : Text(
-                            'Terima Laporan',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
+                    child: Text(
+                      'Terima Laporan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ),
               ],

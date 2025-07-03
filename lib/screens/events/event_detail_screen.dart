@@ -179,12 +179,8 @@ class DisasterDetailPage extends StatelessWidget {
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
                               ),
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/role',
-                                  arguments: {'eventId': eventId},
-                                );
+                              onPressed: () async {
+                                await _checkAvailabilityAndRegister(context, eventId);
                               },
                             ),
                     );
@@ -413,6 +409,143 @@ class DisasterDetailPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _checkAvailabilityAndRegister(BuildContext context, String eventId) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Anda harus login terlebih dahulu')),
+      );
+      return;
+    }
+
+    try {
+      // Get user's current availability status
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
+      
+      if (!userDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Data pengguna tidak ditemukan')),
+        );
+        return;
+      }
+
+      final userData = userDoc.data() as Map<String, dynamic>;
+      final availability = userData['availability'] ?? 'available';
+
+      if (availability == 'active duty') {
+        // Show dialog/modal for active duty status
+        _showActiveDutyDialog(context);
+      } else {
+        // Proceed to volunteer registration screen
+        Navigator.pushNamed(
+          context,
+          '/volunteer_registration',
+          arguments: {'eventId': eventId},
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memeriksa status: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showActiveDutyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_rounded,
+                color: Colors.orange,
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Sedang Bertugas',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Anda saat ini sedang bertugas di event bencana lain.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.blue.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Selesaikan tugas Anda saat ini terlebih dahulu sebelum mendaftar ke event baru.',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+              ),
+              child: Text(
+                'Mengerti',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

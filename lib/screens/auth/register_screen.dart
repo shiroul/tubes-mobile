@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
 
@@ -42,7 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Media',
     'Bantuan Umum',
   ];
-  final Set<String> selectedSkills = {};
+  Set<String> selectedSkills = {};
   
   // Form keys
   final _formKey1 = GlobalKey<FormState>();
@@ -356,7 +355,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               spacing: 8,
               runSpacing: 8,
               children: skills.map((skill) => FilterChip(
-                label: Text(skill),
+                label: Text(
+                  skill,
+                  style: TextStyle(
+                    color: selectedSkills.contains(skill) ? Colors.white : Colors.grey[700],
+                    fontWeight: selectedSkills.contains(skill) ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
                 selected: selectedSkills.contains(skill),
                 onSelected: (selected) {
                   setState(() {
@@ -367,8 +372,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                   });
                 },
-                selectedColor: Colors.red.withOpacity(0.3),
-                checkmarkColor: Colors.red,
+                selectedColor: Colors.blue,
+                backgroundColor: Colors.grey[100],
+                checkmarkColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: selectedSkills.contains(skill) ? Colors.blue : Colors.grey[300]!,
+                    width: 1,
+                  ),
+                ),
+                showCheckmark: false,
               )).toList(),
             ),
             SizedBox(height: 24),
