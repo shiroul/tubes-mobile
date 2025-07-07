@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'register_screen.dart';
+import '../../services/services.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -22,16 +23,15 @@ class _SignInScreenState extends State<SignInScreen> {
     try {
       final email = emailController.text.trim();
       final password = passwordController.text.trim();
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      setState(() { errorMessage = null; });
-      Navigator.pushNamed(context, '/dashboard');
-    } on FirebaseAuthException catch (e) {
-      setState(() { errorMessage = e.message ?? 'Email atau password salah.'; });
+      
+      final user = await AuthService.signInWithEmailAndPassword(email, password);
+      
+      if (user != null) {
+        setState(() { errorMessage = null; });
+        Navigator.pushNamed(context, '/dashboard');
+      }
     } catch (e) {
-      setState(() { errorMessage = 'Terjadi kesalahan. Coba lagi.'; });
+      setState(() { errorMessage = e.toString().replaceFirst('Exception: ', ''); });
     } finally {
       setState(() { isLoading = false; });
     }
@@ -40,21 +40,16 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() { isLoading = true; });
     try {
-      final googleSignIn = GoogleSignIn();
-      await googleSignIn.signOut(); // Force account picker every time
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
+      final result = await AuthService.signInWithGoogle();
+      if (result == null) {
         setState(() { isLoading = false; });
         return;
       }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
-      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+      
+      final user = result['user'];
+      final isNewUser = result['isNewUser'] ?? false;
+      
+      if (isNewUser) {
         // New user, redirect to RegisterScreen with prefilled info
         Navigator.pushReplacement(
           context,
@@ -70,10 +65,11 @@ class _SignInScreenState extends State<SignInScreen> {
         setState(() { errorMessage = null; isLoading = false; });
         Navigator.pushNamed(context, '/dashboard');
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() { errorMessage = e.message ?? 'Gagal login dengan Google.'; isLoading = false; });
     } catch (e) {
-      setState(() { errorMessage = 'Terjadi kesalahan Google Sign-In.'; isLoading = false; });
+      setState(() { 
+        errorMessage = e.toString().replaceFirst('Exception: ', ''); 
+        isLoading = false; 
+      });
     }
   }
 

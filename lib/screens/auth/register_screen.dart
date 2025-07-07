@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
+import '../../services/services.dart';
 
 class RegisterScreen extends StatefulWidget {
   final String? prefillEmail;
@@ -73,16 +74,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<bool> _isEmailOrPhoneExists(String email, String phone) async {
-    final emailQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .get();
-    if (emailQuery.docs.isNotEmpty) return true;
-    final phoneQuery = await FirebaseFirestore.instance
-        .collection('users')
-        .where('phone', isEqualTo: phone)
-        .get();
-    return phoneQuery.docs.isNotEmpty;
+    try {
+      final userData = await UserService.getUserByEmail(email);
+      if (userData != null) return true;
+      
+      final phoneData = await UserService.getUserByPhone(phone);
+      if (phoneData != null) return true;
+      
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> _registerWithEmail() async {
@@ -103,24 +105,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
       
-      User? currentUser = FirebaseAuth.instance.currentUser;
+      User? currentUser = AuthService.currentUser;
       if (currentUser == null) {
-        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        currentUser = userCredential.user;
+        currentUser = await AuthService.signUpWithEmailAndPassword(email, password);
       }
       
-      await FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set({
-        'name': nameController.text.trim(),
-        'email': email,
-        'phone': phone,
-        'createdAt': FieldValue.serverTimestamp(),
-        'provider': currentUser?.providerData.first.providerId ?? 'email',
-        'role': 'relawan',
-        'availability': 'available',
-      }, SetOptions(merge: true));
+      // Create basic user profile
+      if (currentUser != null) {
+        await AuthService.createUserProfile(
+          uid: currentUser.uid,
+          name: nameController.text.trim(),
+          email: email,
+          phone: phone,
+          emergencyContact: '', // Will be filled in next step
+          skills: [], // Will be filled in next step
+        );
+      }
       
       setState(() { 
         errorMessage = null; 
@@ -130,10 +130,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         duration: Duration(milliseconds: 300), 
         curve: Curves.easeInOut
       );
-    } on FirebaseAuthException catch (e) {
-      setState(() { errorMessage = e.message; });
     } catch (e) {
-      setState(() { errorMessage = 'Terjadi kesalahan. Coba lagi.'; });
+      setState(() { errorMessage = e.toString().replaceFirst('Exception: ', ''); });
     } finally {
       setState(() { isLoading = false; });
     }
@@ -147,23 +145,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _uploadingImage = true;
       });
       
-      final imageUrl = await CloudinaryHelper.uploadImage(file);
-      final user = FirebaseAuth.instance.currentUser;
-      
-      if (user != null && imageUrl != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'profileImageUrl': imageUrl,
-        }, SetOptions(merge: true));
+      try {
+        final imageUrl = await CloudinaryHelper.uploadImage(file);
+        final user = AuthService.currentUser;
         
+        if (user != null && imageUrl != null) {
+          await UserService.updateUserProfile(
+            userId: user.uid,
+            updates: {
+              'profileImageUrl': imageUrl,
+            },
+          );
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Foto profil berhasil diunggah!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal mengunggah foto profil.')),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Foto profil berhasil diunggah!')),
+          SnackBar(content: Text('Gagal mengunggah foto profil: $e')),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengunggah foto profil.')),
-        );
+      } finally {
+        setState(() { _uploadingImage = false; });
       }
-      setState(() { _uploadingImage = false; });
     }
   }
 
@@ -179,20 +187,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     
     setState(() { isLoading = true; });
     
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'skills': selectedSkills.toList(),
-        'emergencyNumber': emergencyController.text.trim(),
-      }, SetOptions(merge: true));
+    try {
+      final user = AuthService.currentUser;
+      if (user != null) {
+        await UserService.updateUserProfile(
+          userId: user.uid,
+          updates: {
+            'skills': selectedSkills.toList(),
+            'emergencyContact': emergencyController.text.trim(),
+          },
+        );
+      }
+      
+      setState(() { 
+        errorMessage = null; 
+        isLoading = false;
+      });
+      
+      Navigator.pushNamed(context, '/briefing');
+    } catch (e) {
+      setState(() { 
+        errorMessage = e.toString().replaceFirst('Exception: ', '');
+        isLoading = false;
+      });
     }
-    
-    setState(() { 
-      errorMessage = null; 
-      isLoading = false;
-    });
-    
-    Navigator.pushNamed(context, '/briefing');
   }
 
   Widget _buildBasicInfoPage() {

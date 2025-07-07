@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_app_header.dart';
+import '../services/services.dart';
 import 'dashboard/widgets/lina_branding_card.dart';
 import 'dashboard/widgets/volunteer_stats_card.dart';
 import 'dashboard/widgets/active_disasters_section.dart';
@@ -14,7 +15,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AuthService.currentUser;
     
     return Scaffold(
       backgroundColor: Colors.grey[50],

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_profile.dart';
 import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
+import '../../services/services.dart';
 import 'dart:io';
 
 class UserProfileScreen extends StatefulWidget {
@@ -41,23 +42,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         _pickedImage = file;
         _uploadingImage = true;
       });
-      final imageUrl = await CloudinaryHelper.uploadImage(file);
-      if (imageUrl != null) {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-            'profileImageUrl': imageUrl,
-          }, SetOptions(merge: true));
+      
+      try {
+        final imageUrl = await CloudinaryHelper.uploadImage(file);
+        final user = AuthService.currentUser;
+        if (user != null && imageUrl != null) {
+          await UserService.updateUserProfile(
+            userId: user.uid,
+            updates: {
+              'profileImageUrl': imageUrl,
+            },
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Foto profil berhasil diubah!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal mengunggah foto profil.')),
+          );
         }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Foto profil berhasil diubah!')),
+          SnackBar(content: Text('Gagal mengunggah foto profil: $e')),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengunggah foto profil.')),
-        );
+      } finally {
+        setState(() { _uploadingImage = false; });
       }
-      setState(() { _uploadingImage = false; });
     }
   }
 
@@ -127,7 +137,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         controller: nameController,
                         autofocus: true,
                         onSubmitted: (value) async {
-                          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'name': value.trim()});
+                          await UserService.updateUserProfile(
+                            userId: user.uid,
+                            updates: {'name': value.trim()},
+                          );
                           setState(() => isEditingName = false);
                         },
                       )
@@ -137,7 +150,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   icon: Icon(isEditingName ? Icons.check : Icons.edit),
                   onPressed: () async {
                     if (isEditingName) {
-                      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'name': nameController.text.trim()});
+                      await UserService.updateUserProfile(
+                        userId: user.uid,
+                        updates: {'name': nameController.text.trim()},
+                      );
                     }
                     setState(() => isEditingName = !isEditingName);
                   },
@@ -179,9 +195,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           selectedSkills.remove(skill);
                         }
                       });
-                      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-                        'skills': selectedSkills.toList(),
-                      });
+                      await UserService.updateUserProfile(
+                        userId: user.uid,
+                        updates: {
+                          'skills': selectedSkills.toList(),
+                        },
+                      );
                     },
                     selectedColor: Colors.blue,
                     backgroundColor: Colors.grey[100],
@@ -210,6 +229,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   title: Text('Laporan Saya'),
                   onTap: () {
                     Navigator.pushNamed(context, '/my_reports');
+                  },
+                ),
+              if ((snapshot.data!.data() as Map<String, dynamic>)['role'] == 'admin')
+                ListTile(
+                  leading: Icon(Icons.admin_panel_settings),
+                  title: Text('Admin Panel'),
+                  onTap: () {
+                    // TODO: Implement admin panel navigation
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Admin panel functionality will be implemented')),
+                    );
                   },
                 ),
               ListTile(

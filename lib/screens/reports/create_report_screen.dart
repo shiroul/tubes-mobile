@@ -9,6 +9,7 @@ import '../../helpers/image_picker_helper.dart';
 import '../../helpers/cloudinary_helper.dart';
 import '../../widgets/custom_bottom_nav_bar.dart';
 import '../../widgets/custom_app_header.dart';
+import '../../services/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateReportScreen extends StatefulWidget {
@@ -548,7 +549,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               if (_image != null) {
                                 imageUrl = await CloudinaryHelper.uploadImage(_image!);
                               }
-                              final user = FirebaseAuth.instance.currentUser;
+                              final user = AuthService.currentUser;
                               if (user == null) {
                                 // Close loading dialog
                                 Navigator.pop(context);
@@ -565,18 +566,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               final alamat = _alamatController.text.trim();
                               final combinedDetails = 'Alamat: $alamat\n\nDeskripsi: $reportDetails';
                               
-                              final report = ReportModel(
-                                id: '',
-                                uid: user.uid,
-                                type: _jenisBencana ?? '-',
-                                details: combinedDetails,
-                                coordinates: _coordinates!,
-                                city: _cityName ?? '-',
-                                province: _provinceName ?? '-',
+                              await ReportService.createReport(
+                                disasterType: _jenisBencana ?? '-',
+                                description: combinedDetails,
+                                location: {
+                                  'coordinates': _coordinates!,
+                                  'city': _cityName ?? '-',
+                                  'province': _provinceName ?? '-',
+                                  'address': alamat,
+                                },
                                 media: imageUrl != null ? [imageUrl] : [],
-                                timestamp: Timestamp.now(),
                               );
-                              await FirebaseFirestore.instance.collection('reports').add(report.toMap());
                               
                               // Close loading dialog
                               Navigator.pop(context);

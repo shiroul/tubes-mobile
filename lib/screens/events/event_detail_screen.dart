@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/confirmation_screen.dart';
+import '../../services/services.dart';
 
 class DisasterDetailPage extends StatelessWidget {
   final String eventId;
@@ -150,14 +151,11 @@ class DisasterDetailPage extends StatelessWidget {
                   ),
                 SizedBox(height: 16),
                 // Action Button (role-based)
-                FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).get(),
+                FutureBuilder<bool>(
+                  future: AuthService.isCurrentUserAdmin(),
                   builder: (context, userSnap) {
-                    bool isAdmin = false;
-                    if (userSnap.hasData && userSnap.data!.exists) {
-                      final userData = userSnap.data!.data() as Map<String, dynamic>;
-                      isAdmin = userData['role'] == 'admin';
-                    }
+                    final isAdmin = userSnap.data ?? false;
+                    
                     return SizedBox(
                       width: double.infinity,
                       child: isAdmin
@@ -334,41 +332,9 @@ class DisasterDetailPage extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      // Don't close the bottom sheet immediately
                       try {
-                        // Step 1: Update event status to completed
-                        await FirebaseFirestore.instance.collection('events').doc(eventId).update({
-                          'status': 'completed',
-                          'resolvedAt': FieldValue.serverTimestamp(),
-                        });
-                        
-                        // Step 2: Find all volunteer registrations for this event
-                        final volunteerRegistrations = await FirebaseFirestore.instance
-                            .collection('volunteer_registrations')
-                            .where('eventId', isEqualTo: eventId)
-                            .get();
-                        
-                        // Step 3: Update availability status for all registered volunteers
-                        final batch = FirebaseFirestore.instance.batch();
-                        
-                        for (final registration in volunteerRegistrations.docs) {
-                          final registrationData = registration.data();
-                          final userId = registrationData['userId'];
-                          
-                          if (userId != null) {
-                            // Update user's availability back to 'available'
-                            final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-                            batch.update(userRef, {
-                              'availability': 'available',
-                            });
-                          }
-                          
-                          // Step 4: Delete the volunteer registration record
-                          batch.delete(registration.reference);
-                        }
-                        
-                        // Execute all updates and deletions in a batch
-                        await batch.commit();
+                        // Use EventService to resolve the event
+                        await EventService.resolveEvent(eventId);
                         
                         // Close bottom sheet after successful update
                         Navigator.pop(context);
@@ -435,33 +401,20 @@ class DisasterDetailPage extends StatelessWidget {
   }
 
   Future<void> _checkAvailabilityAndRegister(BuildContext context, String eventId) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Anda harus login terlebih dahulu')),
-      );
-      return;
-    }
-
     try {
-      // Get user's current availability status
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
-      
-      if (!userDoc.exists) {
+      // Check if user is logged in
+      if (!AuthService.isLoggedIn) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Data pengguna tidak ditemukan')),
+          SnackBar(content: Text('Anda harus login terlebih dahulu')),
         );
         return;
       }
 
-      final userData = userDoc.data() as Map<String, dynamic>;
-      final availability = userData['availability'] ?? 'available';
+      // Get user availability status using AuthService
+      final availability = await AuthService.getCurrentUserAvailability();
 
       if (availability == 'active duty') {
-        // Show dialog/modal for active duty status
+        // Show dialog for active duty status
         _showActiveDutyDialog(context);
       } else {
         // Proceed to volunteer registration screen
